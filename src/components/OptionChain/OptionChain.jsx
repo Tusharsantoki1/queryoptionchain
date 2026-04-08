@@ -3,23 +3,34 @@
  *
  * Renders the live option chain for a symbol.
  *
- * 1. useNearestExpiry  → finds nearest expiry from instruments JSON
- * 2. useOptionSocket   → subscribes WebSocket, writes ticks to React Query cache
- * 3. useOptionChain    → reads cache, assembles strike rows, provides maxOI
+ * Flow:
+ *  1. useNearestExpiry  → nearest expiry date from instruments JSON
+ *  2. useOptionSocket   → subscribes WebSocket, writes ticks to RQ cache
+ *  3. useOptionChain    → static list of all strikes (no cache subscription)
+ *  4. useMarketData     → underlying spot LTP (from marketSocket)
+ *  5. useATMStrike      → finds strike closest to spot price
+ *  6. useSlicedStrikes  → 50 strikes below ATM + ATM + 50 above
+ *
+ * Performance:
+ *  - OptionRow is wrapped in React.memo → only re-renders on prop change.
+ *  - Each row subscribes to its own RQ keys internally → tick for strike X
+ *    re-renders ONLY row X, never the table.
+ *  - SIDE_COLUMNS and MAX_OI are module-level constants → stable references.
  */
 
-import useNearestExpiry from "../../hooks/useNearestExpiry";
-import useOptionSocket  from "../../hooks/useOptionSocket";
-import useOptionChain   from "../../hooks/useOptionChain";
-import OptionRow        from "./OptionRow";
+import useNearestExpiry  from "../../hooks/useNearestExpiry";
+import useOptionSocket   from "../../hooks/useOptionSocket";
+import useOptionChain    from "../../hooks/useOptionChain";
+import useMarketData     from "../../hooks/useMarketData";
+import useATMStrike      from "../../hooks/useATMStrike";
+import useSlicedStrikes  from "../../hooks/useSlicedStrikes";
+import { MultiTradeInstrumentIDs } from "../../constants/instruments";
+import OptionRow         from "./OptionRow";
 import "./OptionChain.css";
 
-// maxOI is used by OIVisualBar to normalise bar widths.
-// Since each row now manages its own data independently,
-// pass a fixed reasonable max or compute it separately if needed.
-// For live data, brokers typically send OI per tick so you can
-// track the running max in useOptionSocket and expose it via a ref/context.
-const MAX_OI_PLACEHOLDER = 1_00_00_000; // 1 Cr — adjust to your instrument
+/* ─── Constants ─────────────────────────────────────────── */
+
+const MAX_OI = 1_00_00_000; // 1 Cr — normalises OIVisualBar widths
 
 const SIDE_COLUMNS = [
   { key: "gamma",  label: "Gamma"  },
@@ -32,43 +43,79 @@ const SIDE_COLUMNS = [
   { key: "ltp",    label: "LTP"    },
 ];
 
+const PE_COLUMNS = [...SIDE_COLUMNS].reverse();
+
+/* ─── Component ─────────────────────────────────────────── */
+
 export default function OptionChain({ symbol = "NIFTY" }) {
-  // Step 1 — nearest expiry for this symbol
+  // 1 — nearest expiry
   const expiry = useNearestExpiry(symbol);
 
-  // Step 2 — open WebSocket + subscribe all security IDs for this expiry
+  // 2 — open WebSocket for all option security IDs
   useOptionSocket(symbol, expiry);
 
-  // Step 3 — static list of strikes with their security IDs (no cache subscription)
-  const strikes = useOptionChain(symbol, expiry);
+  // 3 — full static list of strikes (memoised, never causes re-render on tick)
+  const allStrikes = useOptionChain(symbol, expiry);
+
+  // 4 — underlying spot price (written by marketSocket into RQ cache)
+  const underlyingSecId = MultiTradeInstrumentIDs?.[symbol];
+  const { data: spotData } = useMarketData(underlyingSecId);
+  const rawSpotPrice = spotData?.ltp;
+  const spotPrice =
+    rawSpotPrice == null
+      ? null
+      : Number(String(rawSpotPrice).replace(/,/g, ""));
+  const hasValidSpotPrice = Number.isFinite(spotPrice);
+
+  // 5 — ATM strike (memoised, only changes when spot crosses a strike boundary)
+  const atmStrike = useATMStrike(allStrikes, hasValidSpotPrice ? spotPrice : null);
+
+  // 6 — 50 strikes on each side of ATM (with isATM flag injected)
+  const strikes = useSlicedStrikes(allStrikes, atmStrike);
 
   return (
     <div className="oc-wrapper">
 
-      {/* Top bar */}
+      {/* ── Top bar ──────────────────────────────────────── */}
       <div className="oc-topbar">
         <div className="oc-title-block">
           <span className="oc-underlying">{symbol}</span>
           {expiry && <span className="oc-expiry">{expiry}</span>}
         </div>
+
+        {hasValidSpotPrice && (
+          <div className="oc-spot-block">
+            <span className="oc-spot-label">Spot</span>
+            <span className="oc-spot-value">{spotPrice.toFixed(2)}</span>
+          </div>
+        )}
+
         <div className="oc-live-badge">
           <span className="oc-live-dot" />
           LIVE
         </div>
       </div>
 
-      {/* Loading state */}
+      {/* ── Loading ──────────────────────────────────────── */}
       {strikes.length === 0 && (
         <div className="oc-status">
           <span className="oc-spinner" /> Loading option chain…
         </div>
       )}
 
-      {/* Table */}
+      {/* ── Table ────────────────────────────────────────── */}
       {strikes.length > 0 && (
         <div className="oc-table-scroll">
           <table className="oc-table">
-            <thead>
+
+            {/*
+              sticky thead — both header rows are position:sticky so they
+              stay visible while the user scrolls through 100 strike rows.
+              The top offsets are set in OptionChain.css via:
+                .oc-thead-group th { top: 0; }
+                .oc-thead-cols  th { top: <group-row-height>; }
+            */}
+            <thead className="oc-thead-sticky">
               <tr className="oc-thead-group">
                 <th colSpan={SIDE_COLUMNS.length} className="th-group th-group-ce">CALLS</th>
                 <th colSpan={1}                   className="th-group th-group-strike" />
@@ -79,19 +126,22 @@ export default function OptionChain({ symbol = "NIFTY" }) {
                   <th key={`ce-${col.key}`} className="th-col th-col-ce">{col.label}</th>
                 ))}
                 <th className="th-col th-col-strike">Strike</th>
-                {[...SIDE_COLUMNS].reverse().map((col) => (
+                {PE_COLUMNS.map((col) => (
                   <th key={`pe-${col.key}`} className="th-col th-col-pe">{col.label}</th>
                 ))}
               </tr>
             </thead>
+
             <tbody>
               {strikes.map(({ strike, ceSecId, peSecId, isATM }) => (
+                // OptionRow is memoised — only re-renders when its own props
+                // or its internal RQ subscriptions (CE/PE tick) change.
                 <OptionRow
                   key={strike}
                   strike={strike}
                   ceSecId={ceSecId}
                   peSecId={peSecId}
-                  maxOI={MAX_OI_PLACEHOLDER}
+                  maxOI={MAX_OI}
                   isATM={isATM}
                 />
               ))}
@@ -99,6 +149,10 @@ export default function OptionChain({ symbol = "NIFTY" }) {
           </table>
         </div>
       )}
+
+      <div className="oc-footer">
+        Showing {strikes.length} strikes · ATM {atmStrike ?? "—"} · {expiry ?? ""}
+      </div>
 
     </div>
   );

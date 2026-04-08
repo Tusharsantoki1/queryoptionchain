@@ -2,11 +2,10 @@
    Styles for a single row in the option chain table.
 */
 
-/* ── Base row ───────────────────────────────────── */
+/* ── Base row ───────────────────────────────────────── */
 .option-row {
   border-bottom: 1px solid var(--border);
   transition: background-color 0.15s ease;
-  /* GPU-promote the row so bg transitions don't cause layout jank */
   will-change: background-color;
 }
 
@@ -15,17 +14,23 @@
   background-color: var(--row-hover-bg) !important;
 }
 
-/* ATM row gets a faint highlight band */
+/* ── ATM row highlight ──────────────────────────────── */
+/*
+  Subtle but unmistakable: a left accent border + slightly warmer
+  background that doesn't clash with the hover state.
+*/
 .option-row--atm {
   background-color: var(--atm-bg);
+  box-shadow: inset 3px 0 0 var(--accent-blue);  /* left edge accent */
 }
 
+/* ATM strike label gets the accent colour + bold weight */
 .option-row--atm .cell-strike .strike-label {
   color: var(--accent-blue);
   font-weight: 700;
 }
 
-/* ── Generic cell ───────────────────────────────── */
+/* ── Generic cell ───────────────────────────────────── */
 .cell {
   padding: 7px 10px;
   font-size: 0.78rem;
@@ -36,46 +41,26 @@
   border-right: 1px solid var(--border-faint);
 }
 
-.cell:last-child {
-  border-right: none;
-}
+.cell:last-child { border-right: none; }
 
-/* ── Column-specific tweaks ─────────────────────── */
-.cell-greek {
-  color: var(--text-muted);
-  font-size: 0.73rem;
-}
+/* ── Column-specific tweaks ─────────────────────────── */
+.cell-greek  { color: var(--text-muted); font-size: 0.73rem; }
+.cell-iv     { color: var(--text-secondary); }
+.cell-volume { color: var(--text-muted); font-size: 0.73rem; }
 
-.cell-iv {
-  color: var(--text-secondary);
-}
+/* ── LTP colours ────────────────────────────────────── */
+.ltp-up   { color: var(--green) !important; font-weight: 600; }
+.ltp-down { color: var(--red)   !important; font-weight: 600; }
 
-.cell-volume {
-  color: var(--text-muted);
-  font-size: 0.73rem;
-}
-
-/* ── LTP colours ────────────────────────────────── */
-.ltp-up {
-  color: var(--green) !important;
-  font-weight: 600;
-}
-
-.ltp-down {
-  color: var(--red) !important;
-  font-weight: 600;
-}
-
-/* ── Strike cell ────────────────────────────────── */
+/* ── Strike cell ────────────────────────────────────── */
 .cell-strike {
   text-align: center;
   background-color: var(--strike-bg);
-  border-left: 1px solid var(--border);
+  border-left:  1px solid var(--border);
   border-right: 1px solid var(--border);
   min-width: 130px;
 }
 
-/* Centres the strike number */
 .strike-inner {
   display: flex;
   align-items: center;
@@ -91,49 +76,48 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── OI cell ────────────────────────────────────── */
+/* ── OI cell ────────────────────────────────────────── */
 .cell-oi {
   min-width: 80px;
   padding: 5px 8px;
 }
 
-/* ── OI slot: smooth crossfade between bar and actions ── */
+/* ── OI slot: CSS opacity crossfade ─────────────────── */
 /*
-  Both children (.oi-slot__bar and .oi-slot__actions) are stacked
-  via CSS grid so they occupy the same space. Opacity crossfades
-  between them — no layout shift, no sticking.
+  Both children (.oi-slot__bar and .oi-slot__actions) occupy the same
+  grid cell and crossfade via opacity. This avoids conditional mounting
+  (which caused the "stuck button" glitch) and eliminates layout shift.
+  pointer-events is toggled so the invisible layer never captures clicks.
 */
 .oi-slot {
   position: relative;
   display: grid;
   align-items: center;
-  /* Single cell, both children overlap */
 }
 
 .oi-slot__bar,
 .oi-slot__actions {
-  grid-area: 1 / 1;           /* stack in same cell */
-  transition: opacity 0.15s ease;
-  /* Prevent invisible layer from capturing pointer events */
-  pointer-events: none;
+  grid-area: 1 / 1;              /* stack in same grid cell */
+  transition: opacity 0.12s ease;
+  pointer-events: none;          /* disabled by default */
 }
 
+/* Bar: visible by default */
 .oi-slot__bar {
   opacity: 1;
 }
-
 .oi-slot__bar--hidden {
   opacity: 0;
 }
 
+/* Actions: hidden by default */
 .oi-slot__actions {
   opacity: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .oi-slot__actions--visible {
   opacity: 1;
-  pointer-events: auto;       /* re-enable clicks only when visible */
+  pointer-events: auto;          /* re-enable clicks only when visible */
 }

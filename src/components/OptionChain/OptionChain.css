@@ -1,43 +1,38 @@
 /* OptionChain.css
-   Global design tokens (CSS variables) + layout for the
-   Option Chain dashboard. All component stylesheets
-   inherit these variables via :root.
+   Design tokens + layout for the Option Chain dashboard.
+   All component stylesheets inherit these variables via :root.
 */
 
-/* ── Design tokens ──────────────────────────────────────────────
-   Change these to retheme the entire dashboard.
-   Palette: charcoal dark theme inspired by Zerodha / Kite.
-────────────────────────────────────────────────────────────────── */
+/* ── Design tokens ──────────────────────────────────────────── */
 :root {
-  /* Backgrounds */
-  --bg-page:        #0f1117;   /* deepest background */
-  --bg-panel:       #161b25;   /* card / panel surface */
-  --bg-header:      #1c2130;   /* table header band */
-  --strike-bg:      #1a2035;   /* centre strike column */
-  --atm-bg:         #1a2440;   /* ATM row highlight */
-  --row-hover-bg:   #1f2740;   /* row hover tint */
+  --bg-page:        #0f1117;
+  --bg-panel:       #161b25;
+  --bg-header:      #1c2130;
+  --strike-bg:      #1a2035;
+  --atm-bg:         #1a2440;
+  --row-hover-bg:   #1f2740;
 
-  /* Borders */
   --border:         #2a3347;
   --border-faint:   #1e2636;
 
-  /* Text */
   --text-primary:   #d4dbe8;
   --text-secondary: #a0aec0;
   --text-muted:     #5f7391;
 
-  /* Semantic */
   --green:          #26a659;
   --red:            #e05252;
   --accent-blue:    #4a9eff;
   --accent-amber:   #f0a84b;
 
-  /* Typography */
   --font-main: "DM Mono", "JetBrains Mono", "Fira Code", ui-monospace, monospace;
   --font-ui:   "DM Sans", "Geist", "Sora", system-ui, sans-serif;
+
+  /* Sticky header heights — update if padding changes */
+  --thead-group-h: 34px;   /* height of the CALLS / PUTS group row */
+  --thead-cols-h:  30px;   /* height of the column-label row       */
 }
 
-/* ── Base reset for this component tree ─────────────────────── */
+/* ── Base reset ──────────────────────────────────────────────── */
 .oc-wrapper *,
 .oc-wrapper *::before,
 .oc-wrapper *::after {
@@ -129,7 +124,6 @@
   padding: 3px 10px;
 }
 
-/* Pulsing green dot */
 .oc-live-dot {
   width: 6px;
   height: 6px;
@@ -139,13 +133,19 @@
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1;   transform: scale(1);    }
+  0%, 100% { opacity: 1;   transform: scale(1);   }
   50%       { opacity: 0.4; transform: scale(0.6); }
 }
 
 /* ── Table scroll container ──────────────────────────────────── */
 .oc-table-scroll {
   overflow-x: auto;
+  /*
+    KEY: a fixed or max height here enables vertical scrolling so the
+    sticky thead actually works. Adjust to taste (or use calc(100vh - Npx)).
+  */
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg-panel);
@@ -157,6 +157,29 @@
   border-collapse: collapse;
   font-family: var(--font-main);
   font-size: 0.78rem;
+}
+
+/* ── Sticky thead ────────────────────────────────────────────── */
+/*
+  Both header rows stick at the top of the scroll container.
+  Row 1 (group labels: CALLS / PUTS) sticks at top: 0.
+  Row 2 (column labels: Delta, Gamma …) sticks just below row 1.
+*/
+.oc-thead-sticky th {
+  position: sticky;
+  z-index: 2;
+  /* Prevents the header cells from becoming transparent over rows */
+  background-color: var(--bg-header);
+}
+
+/* Group row — sticks at the very top */
+.oc-thead-group th {
+  top: 0;
+}
+
+/* Column row — sticks directly below the group row */
+.oc-thead-cols th {
+  top: var(--thead-group-h);
 }
 
 /* ── Group header row (CALLS / PUTS) ─────────────────────────── */
@@ -180,7 +203,6 @@
 }
 
 .th-group-strike {
-  /* empty filler cell */
   background: var(--strike-bg);
   border-right: 1px solid var(--border);
   min-width: 130px;
@@ -208,17 +230,10 @@
   color: var(--text-muted);
 }
 
-.th-col:last-child {
-  border-right: none;
-}
+.th-col:last-child { border-right: none; }
 
-.th-col-ce {
-  color: rgba(74, 158, 255, 0.65);
-}
-
-.th-col-pe {
-  color: rgba(240, 168, 75, 0.65);
-}
+.th-col-ce     { color: rgba(74, 158, 255, 0.65); }
+.th-col-pe     { color: rgba(240, 168, 75, 0.65); }
 
 .th-col-strike {
   text-align: center;
@@ -227,6 +242,22 @@
   border-left:  1px solid var(--border);
   border-right: 1px solid var(--border);
   min-width: 130px;
+}
+
+/* ── ATM badge (inline in strike cell) ──────────────────────── */
+.atm-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent-blue);
+  background: rgba(74, 158, 255, 0.12);
+  border: 1px solid rgba(74, 158, 255, 0.3);
+  border-radius: 3px;
+  padding: 1px 5px;
+  vertical-align: middle;
+  font-family: var(--font-ui);
 }
 
 /* ── Status / loading / error ────────────────────────────────── */
@@ -241,11 +272,8 @@
   justify-content: center;
 }
 
-.oc-error {
-  color: var(--red);
-}
+.oc-error { color: var(--red); }
 
-/* Simple spinner */
 .oc-spinner {
   display: inline-block;
   width: 16px;

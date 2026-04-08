@@ -36,8 +36,14 @@ export default function useMarketSocket() {
         // Extract price data from response - adjust based on actual field names
         const marketData = {
           ...data,
-          ltp: data.LTP || data.ltp || null,
-          change: data.CHN || data.change || 0,
+          ltp:
+            data.LTP == null && data.ltp == null
+              ? null
+              : Number(String(data.LTP ?? data.ltp).replace(/,/g, "")),
+          change:
+            data.CHN == null && data.change == null
+              ? 0
+              : Number(String(data.CHN ?? data.change).replace(/,/g, "")),
         };
         
         queryClient.setQueryData(["marketData", secId], marketData);
