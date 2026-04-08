@@ -1,0 +1,80 @@
+/* OIVisualBar.css
+   Styles for the inline OI progress-bar cell.
+   The bar is absolutely positioned so it never shifts text layout.
+*/
+
+.oibar-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  min-width: 72px;
+  height: 100%;
+}
+
+.oibar-ce {
+  justify-content: flex-end;
+}
+
+.oibar-pe {
+  justify-content: flex-start;
+}
+
+/* Transparent track that spans the full cell width */
+.oibar-track {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+/* The coloured fill — CE grows from right, PE from left */
+.oibar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  opacity: 0.18;       /* subtle, so the number stays readable */
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* CE side — cool blue/teal */
+.oibar-ce .oibar-fill {
+  background: #3b9eff;
+  right: 0;
+  left: auto;
+}
+
+/* PE side — warm amber/orange */
+.oibar-pe .oibar-fill {
+  background: #ff8c42;
+  left: 0;
+  right: auto;
+}
+
+.oibar-ce .oibar-label {
+  text-align: right;
+  margin-left: auto;
+  margin-right: 6px;
+}
+
+.oibar-pe .oibar-label {
+  text-align: left;
+  margin-left: 6px;
+  margin-right: auto;
+}
+
+/* The text label sits above the bar */
+.oibar-label {
+  position: relative;
+  z-index: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.oibar-empty {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}

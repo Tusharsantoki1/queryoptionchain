@@ -1,0 +1,139 @@
+/* OptionRow.css
+   Styles for a single row in the option chain table.
+*/
+
+/* ── Base row ───────────────────────────────────── */
+.option-row {
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s ease;
+  /* GPU-promote the row so bg transitions don't cause layout jank */
+  will-change: background-color;
+}
+
+.option-row:hover,
+.option-row--hovered {
+  background-color: var(--row-hover-bg) !important;
+}
+
+/* ATM row gets a faint highlight band */
+.option-row--atm {
+  background-color: var(--atm-bg);
+}
+
+.option-row--atm .cell-strike .strike-label {
+  color: var(--accent-blue);
+  font-weight: 700;
+}
+
+/* ── Generic cell ───────────────────────────────── */
+.cell {
+  padding: 7px 10px;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: center;
+  color: var(--text-secondary);
+  border-right: 1px solid var(--border-faint);
+}
+
+.cell:last-child {
+  border-right: none;
+}
+
+/* ── Column-specific tweaks ─────────────────────── */
+.cell-greek {
+  color: var(--text-muted);
+  font-size: 0.73rem;
+}
+
+.cell-iv {
+  color: var(--text-secondary);
+}
+
+.cell-volume {
+  color: var(--text-muted);
+  font-size: 0.73rem;
+}
+
+/* ── LTP colours ────────────────────────────────── */
+.ltp-up {
+  color: var(--green) !important;
+  font-weight: 600;
+}
+
+.ltp-down {
+  color: var(--red) !important;
+  font-weight: 600;
+}
+
+/* ── Strike cell ────────────────────────────────── */
+.cell-strike {
+  text-align: center;
+  background-color: var(--strike-bg);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  min-width: 130px;
+}
+
+/* Centres the strike number */
+.strike-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+}
+
+.strike-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── OI cell ────────────────────────────────────── */
+.cell-oi {
+  min-width: 80px;
+  padding: 5px 8px;
+}
+
+/* ── OI slot: smooth crossfade between bar and actions ── */
+/*
+  Both children (.oi-slot__bar and .oi-slot__actions) are stacked
+  via CSS grid so they occupy the same space. Opacity crossfades
+  between them — no layout shift, no sticking.
+*/
+.oi-slot {
+  position: relative;
+  display: grid;
+  align-items: center;
+  /* Single cell, both children overlap */
+}
+
+.oi-slot__bar,
+.oi-slot__actions {
+  grid-area: 1 / 1;           /* stack in same cell */
+  transition: opacity 0.15s ease;
+  /* Prevent invisible layer from capturing pointer events */
+  pointer-events: none;
+}
+
+.oi-slot__bar {
+  opacity: 1;
+}
+
+.oi-slot__bar--hidden {
+  opacity: 0;
+}
+
+.oi-slot__actions {
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.oi-slot__actions--visible {
+  opacity: 1;
+  pointer-events: auto;       /* re-enable clicks only when visible */
+}

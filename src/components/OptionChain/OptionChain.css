@@ -1,0 +1,271 @@
+/* OptionChain.css
+   Global design tokens (CSS variables) + layout for the
+   Option Chain dashboard. All component stylesheets
+   inherit these variables via :root.
+*/
+
+/* ── Design tokens ──────────────────────────────────────────────
+   Change these to retheme the entire dashboard.
+   Palette: charcoal dark theme inspired by Zerodha / Kite.
+────────────────────────────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-page:        #0f1117;   /* deepest background */
+  --bg-panel:       #161b25;   /* card / panel surface */
+  --bg-header:      #1c2130;   /* table header band */
+  --strike-bg:      #1a2035;   /* centre strike column */
+  --atm-bg:         #1a2440;   /* ATM row highlight */
+  --row-hover-bg:   #1f2740;   /* row hover tint */
+
+  /* Borders */
+  --border:         #2a3347;
+  --border-faint:   #1e2636;
+
+  /* Text */
+  --text-primary:   #d4dbe8;
+  --text-secondary: #a0aec0;
+  --text-muted:     #5f7391;
+
+  /* Semantic */
+  --green:          #26a659;
+  --red:            #e05252;
+  --accent-blue:    #4a9eff;
+  --accent-amber:   #f0a84b;
+
+  /* Typography */
+  --font-main: "DM Mono", "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  --font-ui:   "DM Sans", "Geist", "Sora", system-ui, sans-serif;
+}
+
+/* ── Base reset for this component tree ─────────────────────── */
+.oc-wrapper *,
+.oc-wrapper *::before,
+.oc-wrapper *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Outer wrapper ───────────────────────────────────────────── */
+.oc-wrapper {
+  background-color: var(--bg-page);
+  min-height: 100vh;
+  font-family: var(--font-ui);
+  color: var(--text-primary);
+  padding: 20px 24px 40px;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────── */
+.oc-topbar {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 14px 20px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.oc-title-block {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.oc-underlying {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--font-main);
+}
+
+.oc-expiry {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: #222b3d;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 2px 7px;
+  letter-spacing: 0.04em;
+}
+
+.oc-spot-block {
+  margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.oc-spot-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.oc-spot-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  color: var(--accent-blue);
+  letter-spacing: 0.04em;
+}
+
+/* ── Live badge ──────────────────────────────────────────────── */
+.oc-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  background: rgba(38, 166, 89, 0.09);
+  border: 1px solid rgba(38, 166, 89, 0.25);
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+/* Pulsing green dot */
+.oc-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.4; transform: scale(0.6); }
+}
+
+/* ── Table scroll container ──────────────────────────────────── */
+.oc-table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-panel);
+}
+
+/* ── Table ───────────────────────────────────────────────────── */
+.oc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-main);
+  font-size: 0.78rem;
+}
+
+/* ── Group header row (CALLS / PUTS) ─────────────────────────── */
+.oc-thead-group {
+  background: var(--bg-header);
+}
+
+.th-group {
+  padding: 8px 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.th-group-ce {
+  color: var(--accent-blue);
+  border-right: 1px solid var(--border);
+}
+
+.th-group-strike {
+  /* empty filler cell */
+  background: var(--strike-bg);
+  border-right: 1px solid var(--border);
+  min-width: 130px;
+}
+
+.th-group-pe {
+  color: var(--accent-amber);
+}
+
+/* ── Column header row ───────────────────────────────────────── */
+.oc-thead-cols {
+  background: var(--bg-header);
+}
+
+.th-col {
+  padding: 7px 10px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: right;
+  border-bottom: 2px solid var(--border);
+  border-right: 1px solid var(--border-faint);
+  color: var(--text-muted);
+}
+
+.th-col:last-child {
+  border-right: none;
+}
+
+.th-col-ce {
+  color: rgba(74, 158, 255, 0.65);
+}
+
+.th-col-pe {
+  color: rgba(240, 168, 75, 0.65);
+}
+
+.th-col-strike {
+  text-align: center;
+  background: var(--strike-bg);
+  color: var(--text-secondary);
+  border-left:  1px solid var(--border);
+  border-right: 1px solid var(--border);
+  min-width: 130px;
+}
+
+/* ── Status / loading / error ────────────────────────────────── */
+.oc-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 40px;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  justify-content: center;
+}
+
+.oc-error {
+  color: var(--red);
+}
+
+/* Simple spinner */
+.oc-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.oc-footer {
+  margin-top: 12px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-align: center;
+  letter-spacing: 0.02em;
+  font-family: var(--font-ui);
+}

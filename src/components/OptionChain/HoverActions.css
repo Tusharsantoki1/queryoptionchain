@@ -1,0 +1,64 @@
+/* HoverActions.css
+   Action buttons that appear inside the Strike cell on row hover.
+   They fade in without shifting the table layout.
+*/
+
+.hover-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  animation: ha-fade-in 0.15s ease forwards;
+}
+
+@keyframes ha-fade-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Base button reset + shared styles */
+.ha-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: filter 0.1s ease, transform 0.1s ease;
+  line-height: 1;
+}
+
+.ha-btn:hover {
+  filter: brightness(1.2);
+  transform: scale(1.08);
+}
+
+.ha-btn:active {
+  transform: scale(0.96);
+}
+
+/* Buy — green */
+.ha-buy {
+  background-color: #1a6640;
+  color: #52d68a;
+  border: 1px solid #236b42;
+}
+
+/* Sell — red */
+.ha-sell {
+  background-color: #6b1a1a;
+  color: #f27272;
+  border: 1px solid #6e2222;
+}
+
+/* Chart — neutral */
+.ha-chart {
+  background-color: #2a2f3a;
+  color: #8fa3c0;
+  border: 1px solid #3a4455;
+}
